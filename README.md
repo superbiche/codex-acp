@@ -1,3 +1,8 @@
+> **Patched fork** of [`@agentclientprotocol/codex-acp`](https://github.com/agentclientprotocol/codex-acp)
+> carrying [PR #394](https://github.com/agentclientprotocol/codex-acp/pull/394) (rebase of #337 + fix for #343:
+> ACP session model/effort persisted into Codex threads and preserved across resume).
+> This package retires in favor of the upstream release once the fix lands there.
+
 # ACP adapter for Codex CLI
 
 [![npm version](https://img.shields.io/npm/v/%40agentclientprotocol%2Fcodex-acp)](https://www.npmjs.com/package/@agentclientprotocol/codex-acp)
