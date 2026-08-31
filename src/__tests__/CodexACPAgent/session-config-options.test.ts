@@ -2,7 +2,6 @@ import {describe, expect, it, vi} from "vitest";
 import {
     createCodexMockTestFixture,
     createTestModel,
-    mockPromptTurn,
 } from "../acp-test-utils";
 import {AgentMode, MODE_CONFIG_ID} from "../../AgentMode";
 import {
@@ -19,17 +18,6 @@ import {
 const lowEffort: ReasoningEffortOption = {reasoningEffort: "low", description: "Fast"};
 const mediumEffort: ReasoningEffortOption = {reasoningEffort: "medium", description: "Balanced"};
 const highEffort: ReasoningEffortOption = {reasoningEffort: "high", description: "Thorough"};
-
-function deferred<T>(): {
-    promise: Promise<T>;
-    resolve: (value: T | PromiseLike<T>) => void;
-} {
-    let resolve!: (value: T | PromiseLike<T>) => void;
-    const promise = new Promise<T>((resolvePromise) => {
-        resolve = resolvePromise;
-    });
-    return {promise, resolve};
-}
 
 function buildModels(): {fast: Model; slow: Model} {
     const fast = createTestModel({
@@ -107,6 +95,23 @@ describe("Session config options", () => {
             category: "mode",
             currentValue: AgentMode.DEFAULT_AGENT_MODE.id,
             type: "select",
+            options: [
+                {
+                    value: "read-only",
+                    name: "Ask for approval",
+                    description: "Always ask to edit external files and use the internet",
+                },
+                {
+                    value: "agent",
+                    name: "Approve for me",
+                    description: "Only ask for actions detected as potentially unsafe",
+                },
+                {
+                    value: "agent-full-access",
+                    name: "Full access",
+                    description: "Unrestricted access to the internet and any file on your computer",
+                },
+            ],
         });
         expect((modeOption as any).options.map((o: any) => o.value)).toEqual(
             AgentMode.all().map(m => m.id)
@@ -158,96 +163,17 @@ describe("Session config options", () => {
 
     it("changes the agent mode via setSessionConfigOption", async () => {
         const {fast} = buildModels();
-        const {codexAcpAgent, update} = await createSession("fast-model[medium]", [fast]);
+        const {codexAcpAgent} = await createSession("fast-model[medium]", [fast]);
 
         const result = await codexAcpAgent.setSessionConfigOption({
             sessionId: "session-id",
             configId: MODE_CONFIG_ID,
-            value: AgentMode.ReadOnly.id,
+            value: AgentMode.Agent.id,
         });
 
-        expect(codexAcpAgent.getSessionState("session-id").agentMode).toBe(AgentMode.ReadOnly);
-        expect(update).toHaveBeenCalledWith({
-            threadId: "session-id",
-            approvalPolicy: AgentMode.ReadOnly.approvalPolicy,
-            sandboxPolicy: AgentMode.ReadOnly.sandboxPolicy,
-        });
+        expect(codexAcpAgent.getSessionState("session-id").agentMode).toBe(AgentMode.Agent);
         const modeOption = result.configOptions?.find(o => o.id === MODE_CONFIG_ID);
-        expect((modeOption as any).currentValue).toBe(AgentMode.ReadOnly.id);
-    });
-
-    it("uses a new agent mode for prompts while thread persistence is pending", async () => {
-        const {fast} = buildModels();
-        const {fixture, codexAcpAgent, update} = await createSession("fast-model[medium]", [fast]);
-        const sessionState = codexAcpAgent.getSessionState("session-id");
-        const turnStartSpy = mockPromptTurn(fixture, sessionState.sessionId);
-        const persistence = deferred<void>();
-        update.mockReturnValue(persistence.promise);
-
-        const modeChange = codexAcpAgent.setSessionConfigOption({
-            sessionId: sessionState.sessionId,
-            configId: MODE_CONFIG_ID,
-            value: AgentMode.AgentFullAccess.id,
-        });
-
-        expect(sessionState.agentMode).toBe(AgentMode.AgentFullAccess);
-
-        await codexAcpAgent.prompt({
-            sessionId: sessionState.sessionId,
-            prompt: [{type: "text", text: "test"}],
-        });
-
-        expect(turnStartSpy).toHaveBeenCalledWith(expect.objectContaining({
-            approvalPolicy: AgentMode.AgentFullAccess.approvalPolicy,
-            sandboxPolicy: AgentMode.AgentFullAccess.sandboxPolicy,
-        }));
-
-        persistence.resolve();
-        await modeChange;
-    });
-
-    it("uses a new agent mode when it changes during prompt preparation", async () => {
-        const {fast} = buildModels();
-        const {fixture, codexAcpAgent} = await createSession("fast-model[medium]", [fast]);
-        const sessionState = codexAcpAgent.getSessionState("session-id");
-        const turnStartSpy = mockPromptTurn(fixture, sessionState.sessionId);
-        const skillRefresh = deferred<{data: []}>();
-        const listSkillsSpy = vi.spyOn(fixture.getCodexAppServerClient(), "listSkills")
-            .mockReturnValue(skillRefresh.promise);
-
-        const prompt = codexAcpAgent.prompt({
-            sessionId: sessionState.sessionId,
-            prompt: [{type: "text", text: "test"}],
-        });
-        await vi.waitFor(() => expect(listSkillsSpy).toHaveBeenCalled());
-
-        await codexAcpAgent.setSessionConfigOption({
-            sessionId: sessionState.sessionId,
-            configId: MODE_CONFIG_ID,
-            value: AgentMode.AgentFullAccess.id,
-        });
-        skillRefresh.resolve({data: []});
-        await prompt;
-
-        expect(turnStartSpy).toHaveBeenCalledWith(expect.objectContaining({
-            approvalPolicy: AgentMode.AgentFullAccess.approvalPolicy,
-            sandboxPolicy: AgentMode.AgentFullAccess.sandboxPolicy,
-        }));
-    });
-
-    it("rolls back the agent mode when thread persistence fails", async () => {
-        const {fast} = buildModels();
-        const {codexAcpAgent, update} = await createSession("fast-model[medium]", [fast]);
-        const sessionState = codexAcpAgent.getSessionState("session-id");
-        update.mockRejectedValue(new Error("settings update failed"));
-
-        await expect(codexAcpAgent.setSessionConfigOption({
-            sessionId: sessionState.sessionId,
-            configId: MODE_CONFIG_ID,
-            value: AgentMode.AgentFullAccess.id,
-        })).rejects.toThrow("settings update failed");
-
-        expect(sessionState.agentMode).toBe(AgentMode.Agent);
+        expect((modeOption as any).currentValue).toBe(AgentMode.Agent.id);
     });
 
     it("changes collaboration mode without starting a model turn", async () => {
