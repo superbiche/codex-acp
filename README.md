@@ -1,7 +1,8 @@
 > **Patched fork** of [`@agentclientprotocol/codex-acp`](https://github.com/agentclientprotocol/codex-acp)
 > carrying [PR #394](https://github.com/agentclientprotocol/codex-acp/pull/394) (rebase of #337 + fix for #343:
-> ACP session model/effort is persisted into Codex threads and preserved across resume and load).
-> This package retires in favor of the upstream release once the fix lands there.
+> ACP session model/effort is persisted into Codex threads and preserved across resume and load),
+> plus per-turn model/effort receipts in ACP prompt response metadata.
+> This package retires in favor of upstream releases once both fixes land there.
 
 # ACP adapter for Codex CLI
 
