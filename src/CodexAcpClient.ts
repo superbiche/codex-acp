@@ -45,6 +45,7 @@ import type {
     Thread,
     ThreadGoal,
     ThreadGoalStatus,
+    ThreadSettings,
     ThreadSourceKind,
     TurnCompletedNotification,
     TurnSteerResponse,
@@ -1037,6 +1038,10 @@ export class CodexAcpClient {
             model: modelId.model,
             effort: modelId.effort as ReasoningEffort,
         });
+    }
+
+    getThreadSettings(sessionId: string): ThreadSettings | undefined {
+        return this.codexClient.getThreadSettings(sessionId);
     }
 
     private getCollaborationMode(sessionId: string): ModeKind {
