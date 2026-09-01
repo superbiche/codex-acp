@@ -1,9 +1,9 @@
 {
-  "name": "@agentclientprotocol/codex-acp",
+  "name": "@superbiche/codex-acp",
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.8.0",
+  "version": "1.8.0-fork.1",
   "description": "",
   "main": "dist/index.js",
   "bin": {
