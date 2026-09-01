@@ -179,7 +179,7 @@ type TurnModelReroute = {
 type PromptTurnConfiguration = {
     threadId: string;
     turnId: string;
-    requested: RequestedTurnConfiguration;
+    requested: RequestedTurnConfiguration | null;
     threadSettings: ThreadSettingsConfiguration | null;
     modelReroutes: TurnModelReroute[];
 };
@@ -2477,12 +2477,11 @@ export class CodexAcpServer {
         const promptTurns = new Map<string, PendingPromptTurnConfiguration>();
         const modelReroutes = new Map<string, TurnModelReroute[]>();
         const turnKey = (threadId: string, turnId: string): string => `${threadId}\u0000${turnId}`;
-        const recordTurnStarted = (threadId: string, turnId: string): void => {
-            const modelId = ModelId.fromString(sessionState.currentModelId);
+        const recordTurnStarted = (threadId: string, turnId: string, modelId: ModelId | null): void => {
             promptTurns.set(turnKey(threadId, turnId), {
                 threadId,
                 turnId,
-                requested: {
+                requested: modelId === null ? null : {
                     model: modelId.model,
                     effort: modelId.effort as ReasoningEffort,
                 },
@@ -2589,7 +2588,7 @@ export class CodexAcpServer {
                     ensurePendingTurnStart();
                 },
                 onTurnStarted: (turnId, threadId) => {
-                    recordTurnStarted(threadId, turnId);
+                    recordTurnStarted(threadId, turnId, null);
                     const turn = {threadId, turnId};
                     activePrompt.currentTurn = turn;
                     if (this.promptShouldStop(params.sessionId, activePrompt)) {
@@ -2704,7 +2703,7 @@ export class CodexAcpServer {
                     sessionState.cwd,
                     sessionState.additionalDirectories,
                     (turnId) => {
-                        recordTurnStarted(params.sessionId, turnId);
+                        recordTurnStarted(params.sessionId, turnId, modelId);
                         const turn = {threadId: params.sessionId, turnId};
                         activePrompt.currentTurn = turn;
                         if (this.promptShouldStop(params.sessionId, activePrompt)) {
@@ -2806,7 +2805,7 @@ export class CodexAcpServer {
                             sessionState.cwd,
                             sessionState.additionalDirectories,
                             (turnId) => {
-                                recordTurnStarted(params.sessionId, turnId);
+                                recordTurnStarted(params.sessionId, turnId, modelId);
                                 const turn = {threadId: params.sessionId, turnId};
                                 activePrompt.currentTurn = turn;
                                 if (this.promptShouldStop(params.sessionId, activePrompt)) {
