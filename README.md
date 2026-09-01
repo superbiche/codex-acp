@@ -24,8 +24,8 @@ Use [OpenAI Codex](https://github.com/openai/codex) from [Agent Client Protocol]
 > **Fork release:** this public package is the fleet-pinned
 > `@superbiche/codex-acp` fork. Model and reasoning-effort changes persist
 > across later turns and reconnects. When an explicit `model_provider`
-> override is configured, Codex app-server re-resolves settings from that
-> provider during resume/load/fork; stored model/effort persistence across
+> override is configured, we observe Codex app-server re-resolving settings
+> from that provider during resume/load/fork; stored model/effort persistence across
 > those operations therefore applies only when no provider override is
 > supplied.
 
