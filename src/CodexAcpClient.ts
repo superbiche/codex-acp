@@ -47,6 +47,7 @@ import type {
     ThreadGoal,
     ThreadGoalStatus,
     ThreadResumeParams,
+    ThreadSettings,
     ThreadSourceKind,
     ThreadItem,
     TurnCompletedNotification,
@@ -1093,6 +1094,10 @@ export class CodexAcpClient {
             effort: modelId.effort as ReasoningEffort,
             collaborationMode: createCodexCollaborationMode(collaborationMode, currentModelId),
         });
+    }
+
+    getThreadSettings(sessionId: string): ThreadSettings | undefined {
+        return this.codexClient.getThreadSettings(sessionId);
     }
 
     private getCollaborationMode(sessionId: string): ModeKind {
