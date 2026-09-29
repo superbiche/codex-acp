@@ -268,12 +268,15 @@ function collect(events: MethodCallEvent[]): RecordedMessage[] {
     });
 }
 
+const UPSTREAM_PACKAGE_NAME = "@agentclientprotocol/codex-acp";
+
 /** The random part of an MCP startup tool call id, which `randomUUID()` makes. */
 const MCP_STARTUP_TOOL_CALL_ID = /^mcp_startup\.[^.]+\.([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 
 /**
  * Replaces the exact values that change from run to run or from release to release with stable placeholders.
  * - The package version in `initialize.agentInfo.version` becomes `<version>`.
+ * - The fork package name in `initialize.agentInfo.name` becomes the upstream name.
  * - The random id of each MCP startup tool call becomes `<uuid>`, wherever that exact id occurs.
  *
  * `runScenario` already replaces the exact temporary workspace path.
@@ -288,9 +291,11 @@ export function normalize(messages: RecordedMessage[]): RecordedMessage[] {
     });
     return messages.map(message => {
         if (message.method !== "initialize" || message.direction !== "response") return message;
-        const params = message.params as {agentInfo?: {version?: unknown}};
+        const params = message.params as {agentInfo?: {name?: unknown, version?: unknown}};
         if (params.agentInfo?.version !== packageJson.version) return message;
-        return {...message, params: {...params, agentInfo: {...params.agentInfo, version: "<version>"}}};
+        // Fork: the baselines carry the upstream package name.
+        const name = params.agentInfo.name === packageJson.name ? {name: UPSTREAM_PACKAGE_NAME} : {};
+        return {...message, params: {...params, agentInfo: {...params.agentInfo, ...name, version: "<version>"}}};
     }).map(message => [...randomIds].reduce((result, id) => replaceText(result, id, "<uuid>"), message));
 }
 
