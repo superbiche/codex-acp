@@ -28,6 +28,8 @@ declaration for every client of the adapter process: `true` or `1` always sends
 the receipt, `false` or `0` never sends it. Use it for a client that cannot
 declare capabilities.
 
+The `@superbiche/codex-acp` fork starts with the variable defaulted to `true`.
+
 ## Shape
 
 An enabled receipt looks like this:

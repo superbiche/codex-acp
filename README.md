@@ -1,6 +1,6 @@
 # ACP adapter for Codex CLI
 
-[![npm version](https://img.shields.io/npm/v/%40agentclientprotocol%2Fcodex-acp)](https://www.npmjs.com/package/@agentclientprotocol/codex-acp)
+[![npm version](https://img.shields.io/npm/v/%40superbiche%2Fcodex-acp)](https://www.npmjs.com/package/@superbiche/codex-acp)
 
 Use [OpenAI Codex](https://github.com/openai/codex) from [Agent Client Protocol](https://agentclientprotocol.com/) clients.
 
@@ -21,29 +21,40 @@ Use [OpenAI Codex](https://github.com/openai/codex) from [Agent Client Protocol]
 - Typed warnings and errors through the opt-in [AIR session failure extension](docs/air-extensions.md#session-failure).
 - All AIR extensions, capabilities, and `_meta` keys: [AIR extensions](docs/air-extensions.md).
 - A per-turn [agent file-change report](docs/air-extensions.md#agent-file-change-report) after capability negotiation.
-- Opt-in [turn configuration receipts](docs/turn-configuration-receipt.md) in prompt response metadata.
+- [Turn configuration receipts](docs/turn-configuration-receipt.md) in prompt response metadata.
 - Client-provided MCP servers over command-based stdio config and HTTP transport.
 - Slash commands: `/status`, `/mcp` (with `/mcp reconnect`), `/skills`, `/goal`, `/review`, `/review-branch`, `/review-commit`, `/compact`, and `/logout`, as well as configured skills.
 
 ## Installation
 
+> **Fork release:** this public package is the fleet-pinned
+> `@superbiche/codex-acp` fork. Model and reasoning-effort changes persist
+> across later turns and reconnects. When an explicit `model_provider`
+> override is configured, we observe Codex app-server re-resolving settings
+> from that provider during resume/load/fork; stored model/effort persistence across
+> those operations therefore applies only when no provider override is
+> supplied. Turn configuration receipts are sent to every client unless
+> `TURN_CONFIGURATION_RECEIPT` is set to `false` or `0`. Sessions on a
+> non-OpenAI `model_provider` skip the AI title request and keep the
+> prompt-derived title.
+
 Run the published package directly:
 
 ```bash
-npx -y @agentclientprotocol/codex-acp
+npx -y @superbiche/codex-acp
 ```
 
 Or install it globally:
 
 ```bash
-npm install -g @agentclientprotocol/codex-acp
+npm install -g @superbiche/codex-acp
 codex-acp --version
 ```
 
 The npm package includes a compatible `@openai/codex` dependency. Set `CODEX_PATH` only when you want the adapter to run a different Codex binary:
 
 ```bash
-CODEX_PATH=/path/to/codex npx -y @agentclientprotocol/codex-acp
+CODEX_PATH=/path/to/codex npx -y @superbiche/codex-acp
 ```
 
 To try changes that have landed on `main` but are not released yet, install from the

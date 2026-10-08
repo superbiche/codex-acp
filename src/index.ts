@@ -19,6 +19,7 @@ import {
     SESSION_STEERING_METHOD,
 } from "./AcpExtensions";
 import {ASYNC_TASK_STOP_METHOD} from "./async-tasks/AsyncTaskExtension";
+import {TURN_CONFIGURATION_RECEIPT_ENV} from "./TurnConfigurationReceipt";
 
 const emptyExtensionParamsParser = z.preprocess(
     (params) => params ?? {},
@@ -84,6 +85,8 @@ if (process.argv[2] === "login") {
 }
 
 function startAcpServer() {
+    // Fork default: the fleet reads the receipt from every prompt response.
+    process.env[TURN_CONFIGURATION_RECEIPT_ENV] ??= "true";
     const codexPath = process.env["CODEX_PATH"];
     const configString = process.env["CODEX_CONFIG"];
     const authRequestString = process.env["DEFAULT_AUTH_REQUEST"];
